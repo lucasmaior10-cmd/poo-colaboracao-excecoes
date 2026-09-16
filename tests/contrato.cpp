@@ -1,6 +1,7 @@
 #include "estacao.hpp"
 #include <iostream>
 #include <stdexcept>
+#include <string>
 
 void conferir(bool condicao, const char* mensagem) {
     if (!condicao) throw std::runtime_error(mensagem);
@@ -26,22 +27,26 @@ int main() {
                  "CONTRATO: fontes diferentes devem responder pela mesma interface");
         conferir(executarCiclo(real, true, true, abertas).valor == 20 && abertas == 0,
                  "CONTRATO: leitura valida e sessao liberada");
-        conferir(!executarCiclo(real, false, true, abertas).sucesso && abertas == 0,
-                 "CONTRATO: indisponibilidade tratada e sessao liberada");
+        const auto indisponivel = executarCiclo(real, false, true, abertas);
+        conferir(!indisponivel.sucesso && std::string{indisponivel.motivo} == "indisponivel"
+                 && abertas == 0,
+                 "CONTRATO: indisponibilidade classificada e sessao liberada");
         try {
             adquirir(real, false, false, abertas);
-            conferir(false, "EXTENSAO: indisponibilidade deve ter prioridade");
+            conferir(false, "GUIADO: indisponibilidade deve ter prioridade");
         } catch (const FalhaCalibracao&) {
-            conferir(false, "EXTENSAO: indisponibilidade tem prioridade sobre calibracao");
+            conferir(false, "GUIADO: indisponibilidade tem prioridade sobre calibracao");
         } catch (const FalhaLeitura&) {}
         conferir(abertas == 0, "CONTRATO: sessao liberada apos propagacao");
         try {
             adquirir(real, true, false, abertas);
-            conferir(false, "EXTENSAO: falta de calibracao deve lancar FalhaCalibracao");
+            conferir(false, "GUIADO: falta de calibracao deve lancar FalhaCalibracao");
         } catch (const FalhaCalibracao&) {}
         conferir(abertas == 0, "EXTENSAO: sessao liberada apos FalhaCalibracao");
-        conferir(!executarCiclo(real, true, false, abertas).sucesso && abertas == 0,
-                 "EXTENSAO: cliente recupera falha de calibracao");
+        const auto semCalibracao = executarCiclo(real, true, false, abertas);
+        conferir(!semCalibracao.sucesso && std::string{semCalibracao.motivo} == "calibracao"
+                 && abertas == 0,
+                 "EXTENSAO: capture FalhaCalibracao antes de FalhaLeitura e informe calibracao");
         FonteQuebrada quebrada;
         try {
             executarCiclo(quebrada, true, true, abertas);

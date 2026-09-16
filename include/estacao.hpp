@@ -16,8 +16,7 @@ class PainelFixo {
 public:
     explicit PainelFixo(const SensorNivel& sensor) : sensor_(&sensor) {}
     double leitura() const {
-        // ETAPA GUIADA: consulte o sensor associado em cada chamada.
-        return 0;
+        return sensor_->valor();
     }
 };
 
@@ -65,7 +64,7 @@ inline double adquirir(const IFonteLeitura& fonte, bool disponivel,
                       bool calibrada, int& abertas) {
     Sessao sessao{abertas};
     if (!disponivel) throw FalhaLeitura("fonte indisponivel");
-    // EXTENSAO: se disponivel, mas sem calibracao, lance FalhaCalibracao.
+    // ETAPA GUIADA: se disponivel, mas sem calibracao, lance FalhaCalibracao.
     (void)calibrada;
     return fonte.valor();
 }
@@ -78,13 +77,16 @@ inline double lerServico(const IFonteLeitura& fonte, bool disponivel,
 struct ResultadoLeitura {
     bool sucesso;
     double valor;
+    const char* motivo;
 };
 
 inline ResultadoLeitura executarCiclo(const IFonteLeitura& fonte, bool disponivel,
                                      bool calibrada, int& abertas) {
     try {
-        return {true, lerServico(fonte, disponivel, calibrada, abertas)};
+        return {true, lerServico(fonte, disponivel, calibrada, abertas), ""};
+    // EXTENSAO: capture FalhaCalibracao antes de FalhaLeitura e devolva
+    // {false, 0, "calibracao"}. A classe-base ja captura a indisponibilidade.
     } catch (const FalhaLeitura&) {
-        return {false, 0};
+        return {false, 0, "indisponivel"};
     }
 }

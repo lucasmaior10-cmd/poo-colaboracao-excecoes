@@ -17,8 +17,7 @@ class PainelFixo:
         self._sensor = sensor
 
     def leitura(self):
-        # ETAPA GUIADA: consulte o sensor associado em cada chamada.
-        return 0
+        return self._sensor.valor()
 
 
 class IFonteLeitura(ABC):
@@ -74,7 +73,7 @@ def adquirir(fonte, disponivel, calibrada, sessao):
     try:
         if not disponivel:
             raise FalhaLeitura("fonte indisponivel")
-        # EXTENSAO: se disponivel, mas sem calibracao, lance FalhaCalibracao.
+        # ETAPA GUIADA: se disponivel, mas sem calibracao, lance FalhaCalibracao.
         _ = calibrada
         return fonte.valor()
     finally:
@@ -87,6 +86,8 @@ def ler_servico(fonte, disponivel, calibrada, sessao):
 
 def executar_ciclo(fonte, disponivel, calibrada, sessao):
     try:
-        return True, ler_servico(fonte, disponivel, calibrada, sessao)
+        return True, ler_servico(fonte, disponivel, calibrada, sessao), ""
+    # EXTENSAO: capture FalhaCalibracao antes de FalhaLeitura e devolva
+    # False, 0, "calibracao". A classe-base ja captura a indisponibilidade.
     except FalhaLeitura:
-        return False, 0
+        return False, 0, "indisponivel"
