@@ -1,0 +1,19 @@
+name: Testes da pratica A
+on:
+  push:
+    branches: [main, pratica/integrada-a]
+  pull_request:
+    branches: [main]
+permissions:
+  contents: read
+jobs:
+  contratos:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Baseline executavel
+        if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+        run: make run
+      - name: Contratos C++ e Python
+        if: github.ref != 'refs/heads/main' || github.event_name == 'pull_request'
+        run: make test ETAPA=A
