@@ -1,5 +1,5 @@
 #pragma once
-
+#include <iostream>
 #include <stdexcept>
 
 class SensorNivel {
@@ -60,12 +60,15 @@ public:
     Sessao& operator=(const Sessao&) = delete;
 };
 
-inline double adquirir(const IFonteLeitura& fonte, bool disponivel,
-                      bool calibrada, int& abertas) {
+double adquirir(const IFonteLeitura& fonte, bool disponivel, bool calibrada, int& abertas) {
     Sessao sessao{abertas};
-    if (!disponivel) throw FalhaLeitura("fonte indisponivel");
-    // ETAPA GUIADA: se disponivel, mas sem calibracao, lance FalhaCalibracao.
-    (void)calibrada;
+    std::cout << "Durante aquisicao | sessoes: " << abertas << '\n';
+    if (!disponivel) {
+        throw FalhaLeitura("fonte indisponivel");
+    }
+    if (!calibrada) {
+        throw FalhaCalibracao("fonte sem calibracao");
+    }
     return fonte.valor();
 }
 
@@ -80,12 +83,11 @@ struct ResultadoLeitura {
     const char* motivo;
 };
 
-inline ResultadoLeitura executarCiclo(const IFonteLeitura& fonte, bool disponivel,
-                                     bool calibrada, int& abertas) {
+ResultadoLeitura executarCiclo(const IFonteLeitura& fonte, bool disponivel, bool calibrada, int& abertas) {
     try {
-        return {true, lerServico(fonte, disponivel, calibrada, abertas), ""};
-    // EXTENSAO: capture FalhaCalibracao antes de FalhaLeitura e devolva
-    // {false, 0, "calibracao"}. A classe-base ja captura a indisponibilidade.
+        return {true, lerServico(fonte, disponivel, calibrada, abertas), "sucesso"};
+    } catch (const FalhaCalibracao&) {
+        return {false, 0, "calibracao"};
     } catch (const FalhaLeitura&) {
         return {false, 0, "indisponivel"};
     }
